@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Tiny migrate script for PHP and MySQL.
  *
@@ -16,6 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/** Updated to use new mysqli functions for php7 **/
 
 /**
  * Initialize your database parameters:
@@ -47,13 +49,14 @@ if (count($argv) <= 1) {
 
 // Connect to the database.
 if (!@DEBUG) {
-  $link = mysql_connect(DBADDRESS, DBUSERNAME, DBPASSWORD);
-  if (!$link) {
+
+  $mysqli = new mysqli(DBADDRESS, DBUSERNAME, DBPASSWORD, DBNAME);
+  if (!$mysqli) {
     echo "Failed to connect to the database.\n";
     exit;
   }
-  mysql_select_db(DBNAME, $link);
-  mysql_query("SET NAMES 'utf8'", $link);
+  $mysqli->select_db(DBNAME);
+  $mysqli->query("SET NAMES 'utf8'");
 }
 
 // Find the latest version or start at 0.
@@ -79,16 +82,16 @@ function query($query) {
 
   echo "Query: $query\n";
 
-  $result = mysql_query($query, $link);
+  $result = mysqli_query($query, $link);
   if (!$result) {
     if ($skip_errors) {
-      echo "Query failed: " . mysql_error($link) . "\n";
+      echo "Query failed: " . mysqli_error($link) . "\n";
     }
     else {
-      echo "Migration failed: " . mysql_error($link) . "\n";
+      echo "Migration failed: " . mysqli_error($link) . "\n";
       echo "Aborting.\n";
-      mysql_query('ROLLBACK', $link);
-      mysql_close($link);
+      mysqli_query('ROLLBACK', $link);
+      mysqli_close($link);
       exit;
     }
   }
@@ -207,6 +210,5 @@ else if ($argv[1] == 'migrate') {
 }
 
 if (!@DEBUG) {
-  mysql_close($link);
+  $mysqli->close();
 }
-
